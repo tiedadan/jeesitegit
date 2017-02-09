@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.qcqiche.dao.QcQicheDao">
+    
+	<sql id="qcQicheColumns">
+		a.id AS "id",
+		a.name AS "name",
+		a.office_id AS "office.id",
+		a.decription AS "decription",
+		a.price AS "price",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.remarks AS "remarks",
+		a.del_flag AS "delFlag",
+		o.name AS "office.name",
+    	o.parent_id AS "office.parent.id",
+    	o.parent_ids AS "office.parentIds",
+		qt.id AS 'qcType.id',
+		qt.typename AS 'qcType.typename'
+	</sql>
+	
+	<sql id="qcQicheJoins">
+	LEFT JOIN qc_type qt  ON qt.id=a.qc_type
+	LEFT JOIN sys_office o ON o.id = a.office_id
+	</sql>
+    
+	<select id="get" resultType="QcQiche">
+		SELECT 
+			<include refid="qcQicheColumns"/>
+		FROM qc_qiche a
+		<include refid="qcQicheJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	
+	<select id="findList" resultType="QcQiche">
+		SELECT 
+			<include refid="qcQicheColumns"/>
+		FROM qc_qiche a
+		<include refid="qcQicheJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="office != null and office.id != null and office.id != ''">
+				AND (o.id = #{office.id} OR o.parent_ids LIKE 
+					<if test="dbName == 'oracle'">'%,'||#{office.id}||',%')</if>
+					<if test="dbName == 'mssql'">'%,'+#{office.id}+',%')</if>
+					<if test="dbName == 'mysql'">CONCAT('%,', #{office.id}, ',%'))</if>
+			</if>
+			<if test="name != null and name != ''">
+			
+				AND a.name LIKE 
+					<if test="dbName == 'oracle'">'%'||#{name}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{name}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{name},'%')</if>
+			</if>
+			<!-- <if test="beginPrice != null and endPrice != null and beginPrice != '' and endPrice != ''">
+				AND a.price BETWEEN #{beginPrice} AND #{endPrice}
+			</if> -->
+			
+			<if test="price != null and price != ''">
+				AND a.price = #{price}
+			</if>
+			<!-- <if test="qcTypeId != null and qcTypeId != ''">
+				AND a.qc_type_id = #{qcTypeId}
+			</if> -->
+			<if test="qcType != null and qcType != ''">
+				AND a.qc_type = #{qcType.id}
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="QcQiche">
+		SELECT 
+			<include refid="qcQicheColumns"/>
+		FROM qc_qiche a
+		<include refid="qcQicheJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO qc_qiche(
+			id,
+			name,
+			decription,
+			price,
+			office_id,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			del_flag,
+			qc_type
+		) VALUES (
+			#{id},
+			#{name},
+			#{decription},
+			#{price},
+			#{office.id},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{delFlag},
+			#{qcType.id}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE qc_qiche SET 	
+			name = #{name},
+			decription = #{decription},
+			price = #{price},
+			office_id = #{office.id},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			remarks = #{remarks},
+			qc_type = #{qcType.id}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE qc_qiche SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>

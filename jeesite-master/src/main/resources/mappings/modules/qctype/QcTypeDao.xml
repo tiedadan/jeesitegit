@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.thinkgem.jeesite.modules.qctype.dao.QcTypeDao">
+    
+	<sql id="qcTypeColumns">
+		a.id AS "id",
+		a.typename AS "typename",
+		a.del_flag AS "delFlag",
+		a.create_by AS "createBy.id",
+		a.create_date AS "createDate",
+		a.update_by AS "updateBy.id",
+		a.update_date AS "updateDate",
+		a.user_id AS "userId",
+		a.state AS "state",
+		a.proc_ins_id,
+		a.remarks AS "remarks"
+	</sql>
+	
+	<sql id="qcTypeJoins">
+	</sql>
+    
+	<select id="get" resultType="QcType">
+		SELECT 
+			<include refid="qcTypeColumns"/>
+		FROM qc_type a
+		<include refid="qcTypeJoins"/>
+		WHERE a.id = #{id}
+	</select>
+	<select id="getByProcInsId" resultType="QcType">
+		SELECT 
+			<include refid="qcTypeColumns"/>
+		FROM qc_type a
+		<include refid="qcTypeJoins"/>
+		WHERE a.proc_ins_id = #{procInsId}
+	</select>
+	
+	<select id="findList" resultType="QcType">
+		SELECT 
+			<include refid="qcTypeColumns"/>
+		FROM qc_type a
+		<include refid="qcTypeJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+			<if test="typename != null and typename != ''">
+				AND a.typename LIKE 
+					<if test="dbName == 'oracle'">'%'||#{typename}||'%'</if>
+					<if test="dbName == 'mssql'">'%'+#{typename}+'%'</if>
+					<if test="dbName == 'mysql'">concat('%',#{typename},'%')</if>
+			</if>
+		</where>
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<select id="findAllList" resultType="QcType">
+		SELECT 
+			<include refid="qcTypeColumns"/>
+		FROM qc_type a
+		<include refid="qcTypeJoins"/>
+		<where>
+			a.del_flag = #{DEL_FLAG_NORMAL}
+		</where>		
+		<choose>
+			<when test="page !=null and page.orderBy != null and page.orderBy != ''">
+				ORDER BY ${page.orderBy}
+			</when>
+			<otherwise>
+				ORDER BY a.update_date DESC
+			</otherwise>
+		</choose>
+	</select>
+	
+	<insert id="insert">
+		INSERT INTO qc_type(
+			id,
+			typename,
+			del_flag,
+			create_by,
+			create_date,
+			update_by,
+			update_date,
+			remarks,
+			user_id,
+			state
+		) VALUES (
+			#{id},
+			#{typename},
+			#{delFlag},
+			#{createBy.id},
+			#{createDate},
+			#{updateBy.id},
+			#{updateDate},
+			#{remarks},
+			#{userId},
+			#{state}
+		)
+	</insert>
+	
+	<update id="update">
+		UPDATE qc_type SET 	
+			typename = #{typename},
+			update_by = #{updateBy.id},
+			update_date = #{updateDate},
+			user_id = #{userId},
+			remarks = #{remarks}
+		WHERE id = #{id}
+	</update>
+	
+	<update id="delete">
+		UPDATE qc_type SET 
+			del_flag = #{DEL_FLAG_DELETE}
+		WHERE id = #{id}
+	</update>
+	
+</mapper>
